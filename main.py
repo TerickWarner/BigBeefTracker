@@ -2,17 +2,26 @@ from nba_api.stats.static import teams
 from nba_api.stats.endpoints import leaguegamefinder, boxscoretraditionalv2, boxscoresummaryv2
 import time
 import datetime
+import tweepy
+
+#HIDE KEYS USING GITIGNORE
+auth = tweepy.OAuthHandler(#this is where the consumer keys would go)
+auth.set_access_token(#this is where the Authentication Tokens would go)
+api = tweepy.API(auth)
+
 
 i = 0
 BIG_BEEF_COUNTER = 0
 LAST_GAME_IDS = []
 teams = teams.get_teams()
 
+
 def get_yesterday():
     now = datetime.date.today()
     one_day_ago = now - datetime.timedelta(days=1)
     yesterday = one_day_ago.strftime("%Y-%m-%d")
     return yesterday
+
 
 def get_team_id(ident):
     return teams[ident]["id"], teams[ident]["full_name"]
@@ -40,20 +49,14 @@ def get_game_status():
     return game_status
 
 
-
-
-
-#MAY HAVE TO CHECK IF REBOUNDS ARE NONE TO MAKE SURE STATS ARE THERE EVEN IF GAME STATUS == 3
-
-
 while i < 30:
     if get_game_status() == 3 and (get_last_game()[0] not in LAST_GAME_IDS) and (get_yesterday() == get_last_game()[1]):
         LAST_GAME_IDS.append(get_last_game()[0])
         for (key, value) in get_player_reb_stats()["REB"].items():
             try:
-                if value >= 20:
-                    print(f"{get_player_reb_stats()['PLAYER_NAME'][key]} ({get_player_reb_stats()['TEAM_ABBREVIATION'][key]}) had {int(get_player_reb_stats()['REB'][key])} rebounds")
-                    print("Thats a lot of ROAST BEEF (which is rebounds)")
+                if value >= 15:
+                    api.update_status(f"{get_player_reb_stats()['PLAYER_NAME'][key]} ({get_player_reb_stats()['TEAM_ABBREVIATION'][key]}) had "
+                                      f"{int(get_player_reb_stats()['REB'][key])} rebounds on {get_yesterday()}. Thats a lot of ROAST BEEF! (which is rebounds).")
                     BIG_BEEF_COUNTER += 1
                 else:
                     pass
@@ -63,7 +66,7 @@ while i < 30:
     time.sleep(1)
 
 if BIG_BEEF_COUNTER == 0:
-    print(f"There were no BIG BEEFS on {get_yesterday()}")
+    api.update_status(f"There were no BIG BEEFS on {get_yesterday()}")
 
 
 
